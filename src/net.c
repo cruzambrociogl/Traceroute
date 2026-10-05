@@ -103,8 +103,14 @@ void format_hop_addr(uint32_t addr, int numeric, char *buf, size_t buflen) {
     char ip[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &sa.sin_addr, ip, sizeof(ip));
 
+    /* Con -n el traceroute del sistema imprime sólo la IP, sin paréntesis */
+    if (numeric) {
+        snprintf(buf, buflen, "%s", ip);
+        return;
+    }
+
     char name[NI_MAXHOST];
-    if (numeric || getnameinfo((struct sockaddr *)&sa, sizeof(sa), name, sizeof(name),
+    if (getnameinfo((struct sockaddr *)&sa, sizeof(sa), name, sizeof(name),
                                NULL, 0, NI_NAMEREQD) != 0) {
         snprintf(name, sizeof(name), "%s", ip);
     }

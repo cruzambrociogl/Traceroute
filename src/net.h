@@ -31,8 +31,8 @@ int resolve_target(const char *host, uint32_t *addr);
 int get_source_addr(uint32_t dst_addr, uint32_t *src_addr);
 
 /*
- * Escribe "nombre (ip)" en buf. Si numeric != 0 o no hay DNS inverso,
- * el nombre es la misma IP, igual que el traceroute del sistema.
+ * Escribe "nombre (ip)" en buf; si no hay DNS inverso el nombre es la
+ * misma IP. Con numeric != 0 escribe sólo "ip". Igual que el sistema.
  */
 void format_hop_addr(uint32_t addr, int numeric, char *buf, size_t buflen);
 
