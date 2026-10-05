@@ -123,4 +123,5 @@ docker run --rm -it mytraceroute ./scripts/compare.sh -n 1.1.1.1
 | `*` en un salto que el otro sí muestra | Muchos routers limitan cuántos ICMP generan por segundo (rate limiting) o no responden. |
 | Sólo `*` al final, sin llegar al destino | El destino o un firewall descarta UDP a puertos altos y nunca manda Port Unreachable. |
 | Nombre vs. IP | Depende de que exista registro PTR (DNS inverso) y de si se usó `-n`. |
-| En macOS el sistema dice "52 byte packets" | El traceroute de macOS usa 24 bytes de datos; el nuestro, igual que Linux, 32 (60 en total). |
+| Tamaño de paquete distinto ("40 byte packets" en macOS, "52" en el ejemplo del enunciado) | Cada implementación usa otra cantidad de datos UDP; el nuestro, igual que Linux, usa 32 (60 bytes en total). |
+| En macOS cada router nuevo de un salto sale en otra línea | Es sólo formato: el nuestro, igual que Linux, lo pone en la misma línea. |
