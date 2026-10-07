@@ -54,8 +54,13 @@ sudo ./mytraceroute -v -m 5 1.1.1.1     # muestra cada probe y cada ICMP
 | `-p puerto` | puerto UDP destino base | 33434 |
 | `-n` | no resolver nombres (sólo IPs) | — |
 | `-v` | detalle de cada probe enviado y cada ICMP recibido | — |
+| `-c` | forzar colores aunque la salida no sea una terminal | — |
 
 Las opciones van **antes** del host.
+
+En terminal la salida usa los mismos colores que el enunciado para cada campo:
+salto en verde, nombre en cian, IP en rojo, tiempos en amarillo y `*` en magenta.
+Al redirigir a un archivo los colores se apagan solos; `NO_COLOR=1` también los apaga.
 
 ## Cómo funciona
 
@@ -98,20 +103,19 @@ Con `IP_HDRINCL`, BSD/macOS espera `total_length` y `flags_fo` en orden del host
 ## Pruebas y comparación con el traceroute del sistema
 
 ```sh
-sudo apt-get install traceroute                  # Linux
-sudo ./scripts/compare.sh -n galileo.edu         # guarda ambos logs en logs/
+sudo ./scripts/compare.sh 8.8.8.8          # guarda ambos logs en logs/
+sudo ./scripts/compare.sh -n -f 5 8.8.8.8  # las opciones se pasan a los dos
 ```
 
-El script pasa los mismos parámetros a los dos programas y, en Linux, agrega `-N 1`
-para que el traceroute del sistema mande los probes de uno en uno como el nuestro.
+El script corre primero `mytraceroute` y luego el `traceroute` del sistema con los
+mismos parámetros (`-m 64 -q 3 -w 3 -z 100`, los defaults del enunciado, más las
+opciones que se le pasen). En pantalla se ve con colores; los logs se guardan como
+texto plano. Si `mytraceroute` falla, no se corre el del sistema.
 
-Para probar en Linux desde macOS:
-
-```sh
-docker build -t mytraceroute .
-docker run --rm -it mytraceroute ./scripts/compare.sh -n 1.1.1.1
-```
-
+- **macOS:** usa el `traceroute` que ya trae el sistema.
+- **Linux:** se instala con `sudo apt-get install traceroute`. El script agrega `-N 1`
+  para que mande los probes de uno en uno como el nuestro. En una VM conviene la red
+  en modo **bridged** (en modo NAT aparece un salto extra: el router virtual de la VM).
 ### Diferencias esperadas
 
 | Situación | Por qué |
@@ -120,6 +124,7 @@ docker run --rm -it mytraceroute ./scripts/compare.sh -n 1.1.1.1
 | El traceroute de Linux es más rápido | Por defecto manda hasta 16 probes en paralelo; el nuestro es secuencial con 100 ms de pausa. Con `-N 1` se comporta igual. |
 | Tiempos distintos en el mismo salto | Son mediciones distintas en momentos distintos; la latencia varía. |
 | Varias IPs en un mismo salto | Balanceo de carga (ECMP): cada probe usa otro puerto destino y puede tomar otro camino. Pasa en ambos. |
+| `* * *` en medio del camino, en ambos | Ese router sí reenvía el paquete (el salto siguiente responde) pero no genera ICMP Time Exceeded. |
 | `*` en un salto que el otro sí muestra | Muchos routers limitan cuántos ICMP generan por segundo (rate limiting) o no responden. |
 | Sólo `*` al final, sin llegar al destino | El destino o un firewall descarta UDP a puertos altos y nunca manda Port Unreachable. |
 | Nombre vs. IP | Depende de que exista registro PTR (DNS inverso) y de si se usó `-n`. |
