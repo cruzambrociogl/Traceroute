@@ -1,4 +1,7 @@
 build/
 mytraceroute
 logs/
+GUION_VIDEO.md
+*.mov
+*.mp4
 .DS_Store
