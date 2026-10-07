@@ -25,7 +25,8 @@ STAMP=$(date +%Y%m%d-%H%M%S)
 
 # Último argumento = host, el resto = opciones
 HOST="${!#}"
-SAFE_HOST=$(echo "$HOST" | tr -c 'A-Za-z0-9.-\n' '_')
+# El '-' va al final: en GNU tr, ".-\n" sería un rango y falla
+SAFE_HOST=$(echo "$HOST" | tr -c 'A-Za-z0-9.\n-' '_')
 OURS="logs/${STAMP}_${SAFE_HOST}_mytraceroute.log"
 SYS="logs/${STAMP}_${SAFE_HOST}_sistema.log"
 
@@ -37,12 +38,19 @@ give_back_logs() {
 }
 trap give_back_logs EXIT
 
+# tee hace que mytraceroute no vea una terminal y apague los colores:
+# si nosotros sí estamos en una terminal, los forzamos con -c y después
+# los quitamos del log para que quede como texto plano.
+COLOR=()
+if [ -t 1 ]; then COLOR=(-c); fi
+
 echo "===== mytraceroute $* ====="
-if ! ./mytraceroute "$@" | tee "$OURS"; then
+if ! ./mytraceroute ${COLOR[@]+"${COLOR[@]}"} "$@" | tee "$OURS"; then
     echo "mytraceroute falló; no se corre el traceroute del sistema" >&2
     rm -f "$OURS"
     exit 1
 fi
+sed -i.bak $'s/\x1b\\[[0-9;]*m//g' "$OURS" && rm -f "$OURS.bak"
 
 echo
 if [ "$(uname -s)" = "Linux" ]; then
