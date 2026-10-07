@@ -94,25 +94,14 @@ int get_source_addr(uint32_t dst_addr, uint32_t *src_addr) {
     return 0;
 }
 
-void format_hop_addr(uint32_t addr, int numeric, char *buf, size_t buflen) {
+void lookup_hop_name(uint32_t addr, char *name, size_t namelen) {
     struct sockaddr_in sa;
     memset(&sa, 0, sizeof(sa));
     sa.sin_family      = AF_INET;
     sa.sin_addr.s_addr = addr;
 
-    char ip[INET_ADDRSTRLEN];
-    inet_ntop(AF_INET, &sa.sin_addr, ip, sizeof(ip));
-
-    /* Con -n el traceroute del sistema imprime sólo la IP, sin paréntesis */
-    if (numeric) {
-        snprintf(buf, buflen, "%s", ip);
-        return;
+    if (getnameinfo((struct sockaddr *)&sa, sizeof(sa), name, (socklen_t)namelen,
+                    NULL, 0, NI_NAMEREQD) != 0) {
+        inet_ntop(AF_INET, &sa.sin_addr, name, (socklen_t)namelen);
     }
-
-    char name[NI_MAXHOST];
-    if (getnameinfo((struct sockaddr *)&sa, sizeof(sa), name, sizeof(name),
-                               NULL, 0, NI_NAMEREQD) != 0) {
-        snprintf(name, sizeof(name), "%s", ip);
-    }
-    snprintf(buf, buflen, "%s (%s)", name, ip);
 }
